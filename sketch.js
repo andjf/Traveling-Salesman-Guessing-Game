@@ -133,22 +133,29 @@ function pathsAreEquivalentSpecific(indexPath1, indexPath2) {
 function drawTopBar() {
     noStroke();
     fill(color(50, 168, 162));
-    rect(0, 0, width / 2, TOP_BAR_HEIGHT);
+    rect(0, 0, width / 3, TOP_BAR_HEIGHT);
+    
     fill(color(50, 146, 168));
-    rect(width / 2, 0, width / 2, TOP_BAR_HEIGHT);
+    rect(width / 3, 0, width / 3, TOP_BAR_HEIGHT);
+    
+    fill(color(50, 125, 168));
+    rect(2 * width / 3, 0, width / 3, TOP_BAR_HEIGHT);
     
     fill(255);
     textSize(TOP_BAR_HEIGHT * 0.75)
     textAlign(CENTER, CENTER);
-    text("Check", width / 4, TOP_BAR_HEIGHT * 0.45);
+    text("Check", width / 6, TOP_BAR_HEIGHT * 0.45);
     
     fill(color(255, 0, 0, (playerIndexOrder.indexOf(null) != -1) * 255));
     rectMode(CENTER);
-    rect(width / 4, TOP_BAR_HEIGHT * 0.6, textWidth("Check") * 1.1, TOP_BAR_HEIGHT / 10);
+    rect(width / 6, TOP_BAR_HEIGHT * 0.6, textWidth("Check") * 1.1, TOP_BAR_HEIGHT / 10);
     rectMode(CORNER);
     
     fill(255);
-    text("Reset", width * 3 / 4, TOP_BAR_HEIGHT * 0.45);
+    text("Clear", width * 5 / 6, TOP_BAR_HEIGHT * 0.45);
+    
+    fill(255);
+    text("Reset", width / 2, TOP_BAR_HEIGHT * 0.45);
 }
 
 function drawPathFromIndexOrder(indexOrderToDraw, pathStrokeWeight=CIRCLE_STROKE_WEIGHT*2, pathStrokeColor=color(50, 168, 162)) {
@@ -178,20 +185,51 @@ function arrayOfIndicesMouseIsOver() {
     return toReturn;
 }
 
-function resetPoints() {
+function clearPoints() {
     playerIndexOrder = new Array(NUMBER_OF_POINTS).fill(null);
     shouldDrawBestPath = false;
     currentIndexInPlayerOrder = 0;
 }
 
+function resetPoints() {
+    points = Array(NUMBER_OF_POINTS);
+    pointsRadii = Array(NUMBER_OF_POINTS);
+    optimalIndexOrder = Array(NUMBER_OF_POINTS);
+    
+    playerIndexOrder = Array(NUMBER_OF_POINTS);
+    currentIndexInPlayerOrder = 0;
+    
+    shouldDrawBestPath = false;
+    bestPath = -1;
+    
+    clearPoints();
+    const MINIMUM_RADIUS = 25 / 700 * height;
+    const MAXIMUM_RADIUS = 50 / 700 * height;
+    
+    for(var i = 0; i < NUMBER_OF_POINTS; i++) {
+        playerIndexOrder[i] = null;
+        proposedRadius = random(MINIMUM_RADIUS, MAXIMUM_RADIUS);
+        proposedPoint = createVector(random(proposedRadius + CIRCLE_STROKE_WEIGHT, width - proposedRadius - CIRCLE_STROKE_WEIGHT), random(proposedRadius + CIRCLE_STROKE_WEIGHT + TOP_BAR_HEIGHT, height - proposedRadius - CIRCLE_STROKE_WEIGHT));
+        var whileCounter = 0;
+        while(touchingOtherCircle(proposedPoint, proposedRadius, points, pointsRadii) && whileCounter < 50) {
+            proposedPoint = createVector(random(proposedRadius + CIRCLE_STROKE_WEIGHT, width - proposedRadius - CIRCLE_STROKE_WEIGHT), random(proposedRadius + CIRCLE_STROKE_WEIGHT + TOP_BAR_HEIGHT, height - proposedRadius - CIRCLE_STROKE_WEIGHT));
+            whileCounter++;
+        }
+        points[i] = proposedPoint;
+        pointsRadii[i] = proposedRadius;
+    }
+}
+
 function mousePressed() {
     if(mouseY <= TOP_BAR_HEIGHT) {
-        if(mouseX < width / 2) {
+        if(mouseX < width / 3) {
             if(playerIndexOrder.indexOf(null) == -1) {
                 shouldDrawBestPath = true;
             }
-        } else {
+        } else if(mouseX < 2 * width / 3) {
             resetPoints();
+        } else {
+            clearPoints();
         }
     } else {
         if(arrayOfIndicesMouseIsOver().length != 0) {
